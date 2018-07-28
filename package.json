@@ -1,0 +1,25 @@
+{
+  "name": "json-object-validator",
+  "version": "1.0.0",
+  "description": "A tool to define templates for JSON objects, and validate object properties according these templates.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/glennfaison/json-object-validator.git"
+  },
+  "keywords": [
+    "validator",
+    "json-validator",
+    "object-validator",
+    "json-object-validator"
+  ],
+  "author": "Glenn Faison",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/glennfaison/json-object-validator/issues"
+  },
+  "homepage": "https://github.com/glennfaison/json-object-validator#readme"
+}
