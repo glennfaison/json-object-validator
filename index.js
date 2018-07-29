@@ -10,7 +10,6 @@ JsonValidator.types = {
   "Buffer": "Buffer",
   "Object": "Object",
   "Boolean": "Boolean",
-  "Function": "Function",
   "Date": "Date",
 };
 /**
