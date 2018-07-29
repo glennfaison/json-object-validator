@@ -6,6 +6,7 @@ JsonValidator.types = {
   "Array": Array.prototype.constructor,
   "Buffer": Buffer.prototype.constructor,
   "Object": Object.prototype.constructor,
+  "Boolean": Boolean.prototype.constructor,
 };
 
 var Attribute = function(){
@@ -33,6 +34,10 @@ Attribute.prototype.isBuffer = function() {
 };
 Attribute.prototype.isObject = function() {
   this.valueType = JsonValidator.types.Object;
+  return this;
+};
+Attribute.prototype.isBoolean = function() {
+  this.valueType = JsonValidator.types.Boolean;
   return this;
 };
 
