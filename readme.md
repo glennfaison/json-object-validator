@@ -16,5 +16,18 @@ Below is an example of how to use json-object-validator.
 
     // Test your objects against the schema.<br/>
     let jsonObject = { foo: "foo", bar: 2 };<br/>
-    console.log(jv.validateJson(schema, jsonObject)); // Returns true.
+    console.log(jv.validateJson(schema, jsonObject)); // logs true.
+    
+    // Create an invalid object.<br/>
+    let invalidObject = { foo: 0, bar: null };<br/>
+    
+    // Test against the schema.<br/>
+    console.log(jv.validateJson(schema, jsonObject)); // logs false.<br/>
+    
+    // Make the object valid.
+    invalidObject = jv.makeObjectValid(schema, invalidObject);<br/>
+    
+    // Now you can check to see the result.<br/>
+    console.log(invalidObject);<br/>
+    
   </code>
