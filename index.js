@@ -199,6 +199,89 @@ JsonValidator.makeObjectValid = function(schema, jsonObject) {
   }
   return jsonObject;
 };
+/**
+ * Create an object with random properties, that conforms to a schema.
+ * @param {Object} schema The schema to be used as template.
+ */
+JsonValidator.createRandomObject = function(schema) {
+  let obj = {};
+  for(let prop in schema.properties) {
+    let valueType = schema.properties[prop].valueType;
+    switch (valueType) {
+      case types.Number:
+        obj[prop] = getRandomInteger();
+        break;
+      case types.String:
+        obj[prop] = getRandomString();
+        break;
+      case types.Date:
+        obj[prop] = getRandomDate();
+        break;
+      case types.Array:
+        obj[prop] = getRandomArray();
+        break;
+      case types.Boolean:
+        obj[prop] = getRandomBoolean();
+        break;
+      case types.Object:
+        obj[prop] = getRandomObject();
+        break;
+      default:
+        throw new Error("Invalid Schema");
+        break;
+    }
+  }
+  obj = JsonValidator.makeObjectValid(schema, obj);
+  return obj;
+};
+/**
+ * Create a random Integer.
+ */
+var getRandomInteger = function() {
+  let number = Math.random();
+  let numStr = number.toString().substring(2);
+  number = Number(numStr);
+  return number;
+};
+/**
+ * Create a random Date object.
+ */
+var getRandomDate = function() {
+  let date = new Date(getRandomInteger());
+  return date;
+};
+/**
+ * Create a random Boolean object.
+ */
+var getRandomBoolean = function() {
+  let boolean = getRandomInteger() % 2 === 0;
+  return boolean;
+};
+/**
+ * Create a random object.
+ */
+var getRandomObject = function() {
+  return {};
+};
+/**
+ * Create a random array.
+ */
+var getRandomArray = function() {
+  return [];
+};
+/**
+ * Create a random string of specified length.
+ * @param {Number} length The length of the string to be created.
+ * Defaults to 10.
+ */
+var getRandomString = function(length=10) {
+  let lst = [];
+  for(let i = 0; i < length; i++) {
+    lst.push(getRandomInteger() % 127);
+  }
+  let str = String.fromCodePoint(...lst);
+  return str;
+};
 
 module.exports = JsonValidator;
 module.exports.Attribute = Attribute;

@@ -1,5 +1,5 @@
 # <b>JSON Object Validator</b>
-A tool to define templates for JSON objects, and validate object properties according these templates.
+A tool to define templates for JSON objects, and determine if objects match these templates. Another use of this tool is to transform non-matching objects into matching objects.
 ## <b>Usage</b>
 Below is an example of how to use json-object-validator.
 >
