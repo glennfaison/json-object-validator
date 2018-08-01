@@ -11,20 +11,28 @@ const constructors = {
 };
 
 /**
- * @description Constructor for {JsonValidator}
+ * Constructor for {JsonValidator}.
  */
 var JsonValidator = function() {};
 
-// Create Attribute object in Schema.
+JsonValidator.Attribute = Attribute;
+JsonValidator.types = types;
+
+/**
+ * Create default {Attribute} object in Schema.
+ * @returns {Attribute} a default Attribute object.
+ */
 JsonValidator.setAttributes = function() {
   return new Attribute();
 };
-JsonValidator.isNullOrUndefined = function(value) {
-  return value === null || value === undefined;
-};
+/**
+ * Check if {property} is of type {valueType}.
+ * @param {Any} property The value to be tested.
+ * @param {String} valueType The name of the type.
+ */
 JsonValidator.valueTypeMatches = function(property, valueType) {
-  if(JsonValidator.isNullOrUndefined(property)) { return false; }
-  if(!Object.keys(types).includes(valueType)) { console.log(valueType)
+  if(property === null || property === undefined) { return false; }
+  if(!Object.keys(types).includes(valueType)) {
     throw new Error("Invalid value type provided.");
   }
   if(property.constructor.name === valueType
@@ -44,10 +52,17 @@ JsonValidator.valueTypeMatches = function(property, valueType) {
   }
   return false;
 };
-JsonValidator.createSchema = function(schemaProps, extensible=false) {
+/**
+ * Create a Schema/template object,
+ * and set a value for whether or not it should be extensible.
+ * @param {Object} schemaProps An object containing all expected object
+ * properties, along with their {Attribute} specifications.
+ * @param {Boolean} extensible Is false by default.
+ */
+JsonValidator.createSchema = function(schemaProps, isExtensible=false) {
   let schema = {};
   schema.properties = schemaProps;
-  schema.isExtensible = extensible;
+  schema.isExtensible = isExtensible;
   let schemaSchema = {
     properties: {
       valueType: {
@@ -85,6 +100,11 @@ JsonValidator.createSchema = function(schemaProps, extensible=false) {
   }
   return schema;
 };
+/**
+ * Evaluate whether an object conforms to a schema.
+ * @param {Object} schema The schema to use as template.
+ * @param {Object} jsonObject The object to be evaluated.
+ */
 JsonValidator.objectIsValid = function(schema, jsonObject) {
   let schemaPropss = Object.keys(schema.properties);
   // Check for missing properties.
@@ -123,19 +143,12 @@ JsonValidator.objectIsValid = function(schema, jsonObject) {
   }
   return true;
 };
-JsonValidator.getDefaultValueForType = function(valueType) {
-  let defaultValue;
-  if (valueType === types.String) {
-    defaultValue = "";
-  }
-  else if (valueType === types.Boolean) {
-    defaultValue = false;
-  }
-  else {
-    defaultValue = new constructors[valueType]();
-  }
-  return defaultValue;
-};
+/**
+ * Evaluate whether an object conforms to a schema. If it doesn't,
+ * edit the object's properties to make it conform.
+ * @param {Object} schema The schema to be used as template.
+ * @param {Object} jsonObject The object to be evaluated and edited.
+ */
 JsonValidator.makeObjectValid = function(schema, jsonObject) {
   let schemaPropss = Object.keys(schema.properties);
   // Introduce missing properties.
@@ -186,10 +199,6 @@ JsonValidator.makeObjectValid = function(schema, jsonObject) {
   }
   return jsonObject;
 };
-
-JsonValidator.Attribute = Attribute;
-JsonValidator.types = types;
-
 
 module.exports = JsonValidator;
 module.exports.Attribute = Attribute;
