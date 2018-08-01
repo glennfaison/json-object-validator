@@ -276,10 +276,17 @@ var getRandomArray = function() {
  */
 var getRandomString = function(length=10) {
   let lst = [];
+  // The spaces here are intentional, to increase the chance of picking a space.
+  let charSet = " ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz -_. ";
+  let str = "";
   for(let i = 0; i < length; i++) {
-    lst.push(getRandomInteger() % 127);
+    let ch = charSet.charAt(getRandomInteger() % charSet.length);
+    if(ch  === " " && (i === 0 || i === charSet.length - 1)) {
+      i--;
+      continue;
+    }
+    str += ch;
   }
-  let str = String.fromCodePoint(...lst);
   return str;
 };
 
