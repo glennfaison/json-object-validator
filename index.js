@@ -1,9 +1,5 @@
 const Attribute = require('./attribute');
 const types = require('./types');
-/**
- * @description Constructor for {JsonValidator}
- */
-var JsonValidator = function() {};
 
 const constructors = {
   "String": String.prototype.constructor,
@@ -13,9 +9,40 @@ const constructors = {
   "Object": Object.prototype.constructor,
   "Boolean": Boolean.prototype.constructor
 };
+
+/**
+ * @description Constructor for {JsonValidator}
+ */
+var JsonValidator = function() {};
+
 // Create Attribute object in Schema.
 JsonValidator.setAttributes = function() {
   return new Attribute();
+};
+JsonValidator.isNullOrUndefined = function(value) {
+  return value === null || value === undefined;
+};
+JsonValidator.valueTypeMatches = function(property, valueType) {
+  if(JsonValidator.isNullOrUndefined(property)) { return false; }
+  if(!Object.keys(types).includes(valueType)) { console.log(valueType)
+    throw new Error("Invalid value type provided.");
+  }
+  if(property.constructor.name === valueType
+    || valueType === types.Object) { return true; }
+  else if(valueType === types.Date) {
+    try {
+      new Date(property);
+    } catch (error) {
+      return false;
+    }
+    try {
+      Date.parse(property);
+    } catch (error) {
+      return false;
+    }
+    return true;
+  }
+  return false;
 };
 JsonValidator.createSchema = function(schemaProps, extensible=false) {
   let schema = {};
@@ -59,94 +86,102 @@ JsonValidator.createSchema = function(schemaProps, extensible=false) {
   return schema;
 };
 JsonValidator.objectIsValid = function(schema, jsonObject) {
+  let schemaPropss = Object.keys(schema.properties);
+  // Check for missing properties.
   for(let prop in schema.properties) {
-    if(!jsonObject.hasOwnProperty(prop) && schema.properties[prop].isRequired) {
+    // Check for unneeded properties
+    if(!schemaPropss.includes(prop) && !schema.isExtensible) {
       return false;
     }
-    if(jsonObject[prop] === null && schema.properties[prop].isNotNull) {
-      return false;
-    }
-    if(jsonObject[prop] === null && schema.properties[prop].defaultValue !== null) {
-      return false;
-    }
-    if(jsonObject[prop] === null) { continue; }
+    let schemaDefaultValue = schema.properties[prop].defaultValue;
+    let schemaValueType = schema.properties[prop].valueType;
+    let propIsInValid =
+      (jsonObject[prop] === undefined && schema.properties[prop].isRequired)
+      || (jsonObject[prop] === null && schema.properties[prop].isNotNull);
+    if(propIsInValid) { return false; }
+    if(jsonObject[prop] === null || jsonObject[prop] === undefined) { continue; }
     let propConstructorName = jsonObject[prop].constructor.name;
-    if(propConstructorName !== schema.properties[prop].valueType) {
-      if(schema.properties[prop].valueType === types.Date) {
-        if(propConstructorName === types.Boolean) { return false; }
+    if(!JsonValidator.valueTypeMatches(jsonObject[prop], schemaValueType)) {
+      if(schemaValueType === types.Date) {
         if(propConstructorName === types.String) {
           try {
             Date.parse(jsonObject[prop]);
-          } catch (error) {
-            return false;
-          }
+            continue;
+          } catch (error) { return false; }
         }
+        else if(propConstructorName === types.Number) {
+          try {
+            new Date(jsonObject[prop]);
+            continue;
+          } catch (error) { return false; }
+        }
+        return false;
       }
-      if(schema.properties[prop].valueType !== types.Object &&
-        schema.properties[prop].valueType !== types.Date) { return false; }
-    }
-    if(!Object.keys(schema.properties).includes(prop) && !schema.isExtensible) {
+      else if(schemaValueType === types.Object) { continue; }
       return false;
     }
   }
   return true;
 };
-JsonValidator.makeObjectValid = function(schema, jsonObject) {
-  // Remove unneeded properties.
-  if(!schema.isExtensible) {
-    for(let prop in jsonObject) {
-      if(!Object.keys(schema.properties).includes(prop)) {
-        delete jsonObject[prop];
-      }
-    }
+JsonValidator.getDefaultValueForType = function(valueType) {
+  let defaultValue;
+  if (valueType === types.String) {
+    defaultValue = "";
   }
+  else if (valueType === types.Boolean) {
+    defaultValue = false;
+  }
+  else {
+    defaultValue = new constructors[valueType]();
+  }
+  return defaultValue;
+};
+JsonValidator.makeObjectValid = function(schema, jsonObject) {
+  let schemaPropss = Object.keys(schema.properties);
   // Introduce missing properties.
   for(let prop in schema.properties) {
-    let defaultValue = schema.properties[prop].defaultValue;
-    if(defaultValue === undefined) {
-      if(schema.properties[prop].valueType === types.String) {
-        defaultValue = "";
-      }
-      else if(schema.properties[prop].valueType === types.Boolean) {
-        defaultValue = false;
-      } else {
-        defaultValue = new constructors[schema.properties[prop].valueType]();
-      }
-    }
-    if(!jsonObject.hasOwnProperty(prop) && schema.properties[prop].isRequired) {
-      jsonObject[prop] = defaultValue;
+    // Remove unneeded properties
+    if(!schemaPropss.includes(prop) && !schema.isExtensible) {
+      delete jsonObject[prop];
       continue;
     }
-    if(jsonObject[prop] === null && schema.properties[prop].isNotNull) {
-      jsonObject[prop] = defaultValue;
+    let schemaDefaultValue = schema.properties[prop].defaultValue;
+    let schemaValueType = schema.properties[prop].valueType;
+    let propIsInValid =
+      (jsonObject[prop] === undefined && schema.properties[prop].isRequired)
+      || (jsonObject[prop] === null && schema.properties[prop].isNotNull);
+    if(propIsInValid) {
+      jsonObject[prop] = schemaDefaultValue;
       continue;
     }
-    if(jsonObject[prop] === null && schema.properties[prop].defaultValue !== null) {
-      jsonObject[prop] = defaultValue;
-      continue;
-    }
-    if(jsonObject[prop] === null) { continue; }
+    if(jsonObject[prop] === null || jsonObject[prop] === undefined) { continue; }
     let propConstructorName = jsonObject[prop].constructor.name;
-    if(propConstructorName !== schema.properties[prop].valueType) {
-      if(schema.properties[prop].valueType === types.Date) {
-        if(propConstructorName === types.Boolean) {
-          jsonObject[prop] = defaultValue;
-          continue;
-        }
+    if(!JsonValidator.valueTypeMatches(jsonObject[prop], schemaValueType)) {
+      if(schemaValueType === types.Date) {
         if(propConstructorName === types.String) {
           try {
             Date.parse(jsonObject[prop]);
+            continue;
           } catch (error) {
-            jsonObject[prop] = defaultValue;
+            jsonObject[prop] = schemaDefaultValue;
             continue;
           }
         }
-      }
-      if(schema.properties[prop].valueType !== types.Object &&
-        schema.properties[prop].valueType !== types.Date) {
-        jsonObject[prop] = defaultValue;
+        else if(propConstructorName === types.Number) {
+          try {
+            new Date(jsonObject[prop]);
+            continue;
+          } catch (error) {
+            jsonObject[prop] = schemaDefaultValue;
+            continue;
+          }
+        }
+        jsonObject[prop] = schemaDefaultValue;
         continue;
       }
+      else if(schemaValueType === types.Object) { continue; }
+      jsonObject[prop] = schemaDefaultValue;
+      continue;
     }
   }
   return jsonObject;
